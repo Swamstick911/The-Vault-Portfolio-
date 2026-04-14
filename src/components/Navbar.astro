@@ -1,0 +1,43 @@
+---
+---
+<nav class="navbar">
+    <div class="nav-inner">
+        <ul class="nav-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#works">Works</a></li>
+        </ul>
+    </div>
+</nav>
+
+<style>
+    .navbar {
+        position: fixed;
+        top: var(--space-4);
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+    }
+
+    .nav-inner {
+        display: flex;
+        align-items: center;
+        gap: var(--space-8);
+        padding: var(--space-3) var(--space-8);
+        border: 1px solid var(--trace);
+        border-radius: 999px;
+        background: rgba(8, 10, 15, 0.8);
+        backdrop-filter: blur(12px);
+    }
+
+    .nav-links {
+        display: flex;
+        list-style: none;
+        gap: var(--space-8);
+    }
+
+    .nav-links a {
+        font-size: var(--text-sm);
+        color: var(--text-muted)
+    }
+</style>
