@@ -1,131 +1,208 @@
 ---
 ---
 <section class="hero" id="home">
+  <canvas class="traces-canvas" id="tracesCanvas"></canvas>
 
-    <!--PCB Traces SVG -->
-    <svg class="traces" viewBox="0 0 900 700" xmlns="http://www.w3.org/2000/svg">
-        <!--Top left traces -->
-        <polyline points="0,120 80,120 120,160 220,160" class="trace-line" />
-        <polyline points="0,140 60,140 100,180 180,180" class="trace-line" />
-        <circle cx="220" cy="160" r="5" class="trace-pad" />
+  <div class="hero-content">
+    <p class="hello">Hello there!</p>
+    <p class="iam">I am...</p>
+    <h1 class="name">Swastik Bajpai</h1>
+    <p class="bio">
+      A 15-year old from Kanpur, India who is always curious about hardware
+      and is also a front end developer. I build firmwares, AI that can see and
+      PCBs, all from scratch!
+    </p>
+  </div>
 
-        <!--Top right traces -->
-        <polyline points="900,80 820,80 780,120 680,120" class="trace-line" />
-        <polyline points="900,60 840,60 800,100 720,100 720,200" class="trace-line" />
-        <circle cx="680" cy="120" r="5" class="trace-pad" />
-        <circle cx="720" cy="200" r="5" class="trace-pad" />
-
-        <!--Right side traces -->
-        <polyline points="900,350 820,350 780,310" class="trace-line" />
-        <polyline points="900,400 800,400 800,480 760,480" class="trace-line" />
-        <circle cx="760" cy="480" r="5" class="trace-pad" />
+  <div class="scroll-indicator">
+    <svg width="2" height="60" viewBox="0 0 2 60">
+      <line x1="1" y1="0" x2="1" y2="60" stroke="var(--trace)" stroke-width="1" opacity="0.3"/>
     </svg>
-
-    <!--Hero content -->
-    <div class="hero-content">
-        <p class="hello">Hello there!</p>
-        <p class="iam">I am...</p>
-        <h1 class="name">Swastik Bajpai</h1>
-        <p class="bio">
-            A 15-year old from Kanpur, India who is always curious about hardware and also a front end developer.
-            I build firmwares, AI that can see and PCBs all from scratch!
-        </p>
-    </div>
-
-    <!--Scroll indicator -->
-    <div class="scroll-indicator">
-        <svg width="2" height="60" viewBox="0 0 2 60">
-            <line x1="1" y1="0" x2="1" y2="60" stroke="var(--trace)" stroke-width="1" opacity="0.3"/>
-        </svg>
-        <div class="scroll-dot"></div>
-    </div>
-
+    <div class="scroll-dot"></div>
+  </div>
 </section>
 
+<script>
+const canvas = document.getElementById('tracesCanvas') as HTMLCanvasElement;
+const ctx = canvas.getContext('2d')!;
+
+function rand(min: number, max: number) {
+  return Math.random() * (max - min) + min;
+}
+
+interface Trace {
+  points: {x: number, y: number}[];
+  padAt: number; // index of point that gets a pad circle
+}
+
+function generateTraces(w: number, h: number): Trace[] {
+  const traces: Trace[] = [];
+
+  // Zone definitions: each zone has anchor + direction templates
+  const zones = [
+    // Top-left: traces come from left edge going right
+    ...Array.from({length: 3}, () => {
+      const y = rand(60, h * 0.35);
+      const x1 = rand(0, 60);
+      const diagLen = rand(40, 80);
+      const horizLen = rand(60, 140);
+      return {
+        points: [
+          {x: x1, y},
+          {x: x1 + diagLen, y: y + diagLen * 0.7},
+          {x: x1 + diagLen + horizLen, y: y + diagLen * 0.7}
+        ],
+        padAt: 2
+      };
+    }),
+
+    // Top-right: traces come from right edge going left
+    ...Array.from({length: 3}, () => {
+      const y = rand(50, h * 0.3);
+      const x1 = rand(w - 60, w);
+      const diagLen = rand(40, 80);
+      const horizLen = rand(60, 140);
+      return {
+        points: [
+          {x: x1, y},
+          {x: x1 - diagLen, y: y + diagLen * 0.7},
+          {x: x1 - diagLen - horizLen, y: y + diagLen * 0.7}
+        ],
+        padAt: 2
+      };
+    }),
+
+    // Right-edge: traces go downward
+    ...Array.from({length: 3}, () => {
+      const x = rand(w - 80, w);
+      const y1 = rand(h * 0.3, h * 0.65);
+      const diagLen = rand(40, 70);
+      const vertLen = rand(60, 120);
+      return {
+        points: [
+          {x, y: y1},
+          {x: x - diagLen * 0.7, y: y1 + diagLen},
+          {x: x - diagLen * 0.7, y: y1 + diagLen + vertLen}
+        ],
+        padAt: 2
+      };
+    }),
+
+    // Bottom: traces come from bottom edge going up
+    ...Array.from({length: 3}, () => {
+      const x = rand(w * 0.2, w * 0.75);
+      const y1 = h;
+      const diagLen = rand(40, 70);
+      const horizLen = rand(60, 120);
+      return {
+        points: [
+          {x, y: y1},
+          {x: x + diagLen * 0.7, y: y1 - diagLen},
+          {x: x + diagLen * 0.7 + horizLen, y: y1 - diagLen}
+        ],
+        padAt: 2
+      };
+    }),
+  ];
+
+  return zones;
+}
+
+function drawTraces() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const traces = generateTraces(canvas.width, canvas.height);
+
+  traces.forEach(trace => {
+    ctx.beginPath();
+    ctx.moveTo(trace.points[0].x, trace.points[0].y);
+    trace.points.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.strokeStyle = '#0ea5c9';
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.7;
+    ctx.stroke();
+
+    // Draw pad circle at end
+    const pad = trace.points[trace.padAt];
+    ctx.beginPath();
+    ctx.arc(pad.x, pad.y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#0ea5c9';
+    ctx.globalAlpha = 0.9;
+    ctx.fill();
+  });
+}
+
+drawTraces();
+window.addEventListener('resize', drawTraces);
+</script>
+
 <style>
-    .hero {
-        position: relative;
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        overflow: hidden;
-        padding: var(--space-24) var(--space-8);
-    }
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding: var(--space-24) var(--space-8);
+  }
 
-    .traces {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-    }
+  .traces-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
 
-    .trace-line {
-        fill: none;
-        stroke: var(--trace);
-        stroke-width: 1.5;
-        opacity: 0.7;
-    }
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 600px;
+  }
 
-    .trace-pad {
-        fill: var(--trace);
-        opacity: 0.9;
-    }
+  .hello, .iam {
+    font-size: var(--text-lg);
+    color: var(--text-muted);
+    margin-bottom: var(--space-1);
+  }
 
-    .hero-content {
-        position: relative;
-        z-index: 2;
-        max-width: 600px;
-    }
+  .name {
+    font-family: var(--font-display);
+    font-size: var(--text-hero);
+    color: var(--text);
+    margin-bottom: var(--space-6);
+    line-height: 1.05;
+  }
 
-    .hello {
-        font-size: var(--text-lg);
-        color: var(--text-muted);
-        margin-bottom: var(--space-1);
-    }
+  .bio {
+    font-size: var(--text-base);
+    color: var(--text-muted);
+    max-width: 55ch;
+    line-height: 1.7;
+  }
 
-    .iam {
-        font-size: var(--text-lg);
-        color: var(--text-muted);
-        margin-bottom: var(--space-2);
-    }
+  .scroll-indicator {
+    position: absolute;
+    bottom: var(--space-8);
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 
-    .name {
-        font-family: var(--font-display);
-        font-size: var(--text-hero);
-        color: var(--text);
-        margin-bottom: var(--space-6);
-        line-height: 1.05;
-    }
+  .scroll-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--trace);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
 
-    .bio {
-        font-size: var(--text-base);
-        color: var(--text-muted);
-        max-width: 55ch;
-        line-height: 1.7;
-    }
-
-    .scroll-indicator {
-        position: absolute;
-        bottom: var(--space-8);
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0;
-    }
-
-    .scroll-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: var(--trace);
-        animation: scrollPulse 2s ease-in-out infinite;
-    }
-
-    @keyframes scrollPulse {
-        0%, 100% { opacity: 0.3; transform: translateY(0);}
-        50% { opacity: 1; transform: translateY(8px); }
-    }
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.3; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(8px); }
+  }
 </style>
