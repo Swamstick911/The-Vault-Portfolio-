@@ -1,170 +1,56 @@
 ---
 ---
 <section class="hero" id="home">
-  <canvas class="traces-canvas" id="tracesCanvas"></canvas>
+  <div class="pcb-bg"></div>
+  <svg
+    class="traces"
+    viewBox="0 0 1440 900"
+    preserveAspectRatio="xMidYMid slice"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <!--Top left -->
+    <polyline points="0,128 222,128 258,168" class="trace"/>
+    <circle cx="258" cy="168" r="5" class="pad"/>
+    <polyline points="0,168 62,168 98,208" class="trace" />
+    <polyline points="510,0 510,68" class="trace"/> <!--Top nav connection -->
+
+    <!--Top right -->
+    <polyline points="725,0 725,52 762,90 902,90" class="trace"/>
+    <circle cx="902" cy="90" r="5" class="pad"/>
+    <polyline points="818,0 818,90 878,150 1300,150" class="trace"/>
+
+    <!--Right -->
+    <polyline points="1440,310 862,310 822,350 822,445" class="trace" />
+
+    <!--Bottom -->
+    <polyline points="292,900 292,768 338,722 492,722" class="trace" />
+    <polyline points="502,900 502,808 548,762 642,762" class="trace"/>
+    <circle cx="642" cy="762" r="5" class="pad"/>
+  </svg>
 
   <div class="hero-content">
     <p class="hello">Hello there!</p>
     <p class="iam">I am...</p>
     <h1 class="name">Swastik Bajpai</h1>
     <p class="bio">
-      A 15-year old from Kanpur, India who is always curious about hardware
-      and is also a front end developer. I build firmwares, AI that can see and
-      PCBs, all from scratch!
+      A 15 year old from Kanpur, India who is always curious about hardware and is also a front end developer.
+      I build firmwares, AI that can see and PCBs, all from scratch!
     </p>
-  </div>
-
-  <div class="scroll-indicator">
-    <svg width="2" height="60" viewBox="0 0 2 60">
-      <line x1="1" y1="0" x2="1" y2="60" stroke="var(--trace)" stroke-width="1" opacity="0.3"/>
-    </svg>
-    <div class="scroll-dot"></div>
   </div>
 </section>
 
-<script>
-const canvas = document.getElementById('tracesCanvas') as HTMLCanvasElement;
-const ctx = canvas.getContext('2d')!;
-
-function rand(min: number, max: number) {
-  return Math.random() * (max - min) + min;
-}
-function dist(x1: number, y1: number, x2: number, y2: number) {
-  return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-}
-
-interface TracePoint { x: number; y: number; }
-interface Trace { points: TracePoint[]; hasPad: boolean; }
-
-const EDGE_OFFSET = 15;
-
-function buildTrace(sx: number, sy: number, edge: string, w: number, h: number): Trace | null {
-  const diagLen = rand(50, 90);
-  const straightLen = rand(100, 180);
-  const goPositive = Math.random() > 0.5;
-  const hasPad = Math.random() > 0.4;
-
-  let start: TracePoint, mid: TracePoint, end: TracePoint;
-
-  switch (edge) {
-    case 'top':
-      start = { x: sx, y: EDGE_OFFSET };
-      mid   = { x: sx + (goPositive ? diagLen : -diagLen), y: EDGE_OFFSET + diagLen };
-      end   = { x: mid.x, y: mid.y + straightLen };
-      break;
-    case 'bottom':
-      start = { x: sx, y: h - EDGE_OFFSET };
-      mid   = { x: sx + (goPositive ? diagLen : -diagLen), y: h - EDGE_OFFSET - diagLen };
-      end   = { x: mid.x, y: mid.y - straightLen };
-      break;
-    case 'right':
-      start = { x: w - EDGE_OFFSET, y: sy };
-      mid   = { x: w - EDGE_OFFSET - diagLen, y: sy + (goPositive ? diagLen : -diagLen) };
-      end   = { x: mid.x - straightLen, y: mid.y };
-      break;
-    default: // left
-      start = { x: EDGE_OFFSET, y: sy };
-      mid   = { x: EDGE_OFFSET + diagLen, y: sy + (goPositive ? diagLen : -diagLen) };
-      end   = { x: mid.x + straightLen, y: mid.y };
-      break;
-  }
-
-  // Reject if end point goes off canvas
-  if (end.x < 0 || end.x > w || end.y < 0 || end.y > h) return null;
-
-  return { points: [start, mid, end], hasPad };
-}
-
-function drawTraces() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  const w = canvas.width;
-  const h = canvas.height;
-
-  // Content zone
-  const cx1 = 0, cy1 = h * 0.1, cx2 = w * 0.6, cy2 = h * 0.8;
-
-  function inContent(x: number, y: number) {
-    return x > cx1 && x < cx2 && y > cy1 && y < cy2;
-  }
-
-  // Distribute start positions evenly across all edges
-  // Each edge gets a fixed number of slots
-  type Slot = { x: number; y: number; edge: string };
-  const slots: Slot[] = [];
-  const MARGIN = 60;
-
-  // Top edge — 5 evenly spaced slots
-  for (let i = 0; i < 5; i++) {
-    slots.push({ x: MARGIN + (i / 4) * (w - MARGIN * 2), y: 0, edge: 'top' });
-  }
-  // Bottom edge — 5 evenly spaced slots
-  for (let i = 0; i < 5; i++) {
-    slots.push({ x: MARGIN + (i / 4) * (w - MARGIN * 2), y: h, edge: 'bottom' });
-  }
-  // Right edge — 5 evenly spaced slots
-  for (let i = 0; i < 5; i++) {
-    slots.push({ x: w, y: MARGIN + (i / 4) * (h - MARGIN * 2), edge: 'right' });
-  }
-  // Left edge — 5 evenly spaced slots
-  for (let i = 0; i < 5; i++) {
-    slots.push({ x: 0, y: MARGIN + (i / 4) * (h - MARGIN * 2), edge: 'left' });
-  }
-
-  // Shuffle slots
-  slots.sort(() => Math.random() - 0.5);
-
-  const placed: Slot[] = [];
-  const MIN_DIST = 90; // reduced so more traces fit
-  const MAX_TRACES = 18;
-
-  for (const s of slots) {
-    if (placed.length >= MAX_TRACES) break;
-    // Skip if too close to another placed trace
-    const tooClose = placed.some(p => dist(p.x, p.y, s.x, s.y) < MIN_DIST);
-    if (tooClose) continue;
-    placed.push(s);
-  }
-
-  // Draw
-  placed.forEach(p => {
-    const trace = buildTrace(p.x, p.y, p.edge, w, h);
-    if (!trace) return;
-
-    const end = trace.points[2];
-    const mid = trace.points[1];
-
-    // Skip if mid or end lands inside content zone
-    if (inContent(mid.x, mid.y) || inContent(end.x, end.y)) return;
-
-    ctx.beginPath();
-    ctx.moveTo(trace.points[0].x, trace.points[0].y);
-    ctx.lineTo(mid.x, mid.y);
-    ctx.lineTo(end.x, end.y);
-    ctx.strokeStyle = '#0ea5c9';
-    ctx.lineWidth = 1.5;
-    ctx.globalAlpha = 0.65;
-    ctx.stroke();
-
-    if (trace.hasPad) {
-      ctx.beginPath();
-      ctx.arc(end.x, end.y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = '#0ea5c9';
-      ctx.globalAlpha = 0.9;
-      ctx.fill();
-    }
-
-    ctx.globalAlpha = 1;
-  });
-}
-
-drawTraces();
-window.addEventListener('resize', drawTraces);
-</script>
-
 <style>
+  .pcb-bg {
+    position: absolute;
+    inset: 0;
+    background-image: url('../assets/pcb.jpg');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.05;
+    pointer-events: none;
+    z-index: 0;
+  }
+
   .hero {
     position: relative;
     min-height: 100vh;
@@ -174,12 +60,26 @@ window.addEventListener('resize', drawTraces);
     padding: var(--space-24) var(--space-8);
   }
 
-  .traces-canvas {
+  .traces {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     pointer-events: none;
+  }
+
+  .trace {
+    fill: none;
+    stroke: #0ea5c9;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.7;
+  }
+
+  .pad {
+    fill: #0ea5c9;
+    opacity: 0.9;
   }
 
   .hero-content {
@@ -188,7 +88,7 @@ window.addEventListener('resize', drawTraces);
     max-width: 600px;
   }
 
-  .hello, .iam {
+  .hero, .iam {
     font-size: var(--text-lg);
     color: var(--text-muted);
     margin-bottom: var(--space-1);
@@ -205,7 +105,7 @@ window.addEventListener('resize', drawTraces);
   .bio {
     font-size: var(--text-base);
     color: var(--text-muted);
-    max-width: 55ch;
+    max-width: 52ch;
     line-height: 1.7;
   }
 
@@ -221,7 +121,7 @@ window.addEventListener('resize', drawTraces);
 
   .scroll-dot {
     width: 6px;
-    height: 6px;
+    height: 8px;
     border-radius: 50%;
     background: var(--trace);
     animation: scrollPulse 2s ease-in-out infinite;
