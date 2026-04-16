@@ -25,56 +25,52 @@
 <script>
 const canvas = document.getElementById('tracesCanvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d')!;
-const MIN_DIST = 130;
-const MAX_NEIGHBORS = 1;
-const MARGIN = 80;
-const MAX_TRACES = 11;
-const EDGE_OFFSET = 15;
 
 function rand(min: number, max: number) {
   return Math.random() * (max - min) + min;
 }
-
 function dist(x1: number, y1: number, x2: number, y2: number) {
   return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 }
 
-interface TracePoint { x: number; y: number}
-interface Trace {
-  points: TracePoint[];
-  hasPad: boolean;
-}
+interface TracePoint { x: number; y: number; }
+interface Trace { points: TracePoint[]; hasPad: boolean; }
 
-function buildTrace(sx: number, sy: number, edge: string): Trace {
-  const diagLen = rand(60, 110);      // longer diagonal
-  const straightLen = rand(120, 220); // much longer straight run
-  const goRight = Math.random() > 0.5;
-  const hasPad = Math.random() > 0.45;
+const EDGE_OFFSET = 15;
+
+function buildTrace(sx: number, sy: number, edge: string, w: number, h: number): Trace | null {
+  const diagLen = rand(50, 90);
+  const straightLen = rand(100, 180);
+  const goPositive = Math.random() > 0.5;
+  const hasPad = Math.random() > 0.4;
 
   let start: TracePoint, mid: TracePoint, end: TracePoint;
 
   switch (edge) {
     case 'top':
       start = { x: sx, y: EDGE_OFFSET };
-      mid   = { x: sx + (goRight ? diagLen : -diagLen), y: EDGE_OFFSET + diagLen };
+      mid   = { x: sx + (goPositive ? diagLen : -diagLen), y: EDGE_OFFSET + diagLen };
       end   = { x: mid.x, y: mid.y + straightLen };
       break;
     case 'bottom':
-      start = { x: sx, y: canvas.height - EDGE_OFFSET };
-      mid   = { x: sx + (goRight ? diagLen : -diagLen), y: canvas.height - EDGE_OFFSET - diagLen };
+      start = { x: sx, y: h - EDGE_OFFSET };
+      mid   = { x: sx + (goPositive ? diagLen : -diagLen), y: h - EDGE_OFFSET - diagLen };
       end   = { x: mid.x, y: mid.y - straightLen };
       break;
     case 'right':
-      start = { x: canvas.width - EDGE_OFFSET, y: sy };
-      mid   = { x: canvas.width - EDGE_OFFSET - diagLen, y: sy + (goRight ? diagLen : -diagLen) };
+      start = { x: w - EDGE_OFFSET, y: sy };
+      mid   = { x: w - EDGE_OFFSET - diagLen, y: sy + (goPositive ? diagLen : -diagLen) };
       end   = { x: mid.x - straightLen, y: mid.y };
       break;
     default: // left
       start = { x: EDGE_OFFSET, y: sy };
-      mid   = { x: EDGE_OFFSET + diagLen, y: sy + (goRight ? diagLen : -diagLen) };
+      mid   = { x: EDGE_OFFSET + diagLen, y: sy + (goPositive ? diagLen : -diagLen) };
       end   = { x: mid.x + straightLen, y: mid.y };
       break;
   }
+
+  // Reject if end point goes off canvas
+  if (end.x < 0 || end.x > w || end.y < 0 || end.y > h) return null;
 
   return { points: [start, mid, end], hasPad };
 }
@@ -86,73 +82,75 @@ function drawTraces() {
 
   const w = canvas.width;
   const h = canvas.height;
-  const MIN_DIST = 130; //min distance between two start points
-  const MAX_NEIGHBORS = 1; //max 1 other trace within 2x MAX_DIST 
-  const MARGIN = 100; //stay away from corners
-  const MAX_TRACES = 11;
 
-  //Protected content zone
-  const contentZone = {
-    x1: 0, y1: h * 0.15,
-    x2: w * 0.65, y2: h * 0.75
-  };
+  // Content zone
+  const cx1 = 0, cy1 = h * 0.1, cx2 = w * 0.6, cy2 = h * 0.8;
 
-  function inContentZone(x: number, y: number) {
-    return x > contentZone.x1 && x < contentZone.x2 && y > contentZone.y1 && y < contentZone.y2; 
+  function inContent(x: number, y: number) {
+    return x > cx1 && x < cx2 && y > cy1 && y < cy2;
   }
 
-  //Generate candidates spread across all 4 edges
-  type Candidate = {x: number, y: number, edge: string};
-  const candidates: Candidate[] = [];
+  // Distribute start positions evenly across all edges
+  // Each edge gets a fixed number of slots
+  type Slot = { x: number; y: number; edge: string };
+  const slots: Slot[] = [];
+  const MARGIN = 60;
 
-  const steps = 25;
-  for (let i = 0; i < steps; i++) {
-    const t = i/steps;
-    candidates.push({x: MARGIN + t * (w - MARGIN * 2), y: 0, edge: 'top'});
-    candidates.push({x: MARGIN + t * (w - MARGIN * 2), y: h, edge: 'bottom'});
-    candidates.push({x: w, y: MARGIN + t * (h - MARGIN * 2), edge: 'right'});
-    candidates.push({x: 0, y: MARGIN + t * (h - MARGIN * 2), edge: 'left'});
+  // Top edge — 5 evenly spaced slots
+  for (let i = 0; i < 5; i++) {
+    slots.push({ x: MARGIN + (i / 4) * (w - MARGIN * 2), y: 0, edge: 'top' });
+  }
+  // Bottom edge — 5 evenly spaced slots
+  for (let i = 0; i < 5; i++) {
+    slots.push({ x: MARGIN + (i / 4) * (w - MARGIN * 2), y: h, edge: 'bottom' });
+  }
+  // Right edge — 5 evenly spaced slots
+  for (let i = 0; i < 5; i++) {
+    slots.push({ x: w, y: MARGIN + (i / 4) * (h - MARGIN * 2), edge: 'right' });
+  }
+  // Left edge — 5 evenly spaced slots
+  for (let i = 0; i < 5; i++) {
+    slots.push({ x: 0, y: MARGIN + (i / 4) * (h - MARGIN * 2), edge: 'left' });
   }
 
-  //Shuffle
-  candidates.sort(() => Math.random() - 0.5);
+  // Shuffle slots
+  slots.sort(() => Math.random() - 0.5);
 
-  const placed: Candidate[] = [];
+  const placed: Slot[] = [];
+  const MIN_DIST = 90; // reduced so more traces fit
+  const MAX_TRACES = 18;
 
-  for (const c of candidates) {
+  for (const s of slots) {
     if (placed.length >= MAX_TRACES) break;
-
-    //Check min distance
-    const tooClose = placed.some(p => dist(p.x, p.y, c.x, c.y) < MIN_DIST);
+    // Skip if too close to another placed trace
+    const tooClose = placed.some(p => dist(p.x, p.y, s.x, s.y) < MIN_DIST);
     if (tooClose) continue;
-
-    //Max 1 neighbor within 2x MIN_DIST
-    const nearbyCount = placed.filter(p => dist(p.x, p.y, c.x, c.y) < MIN_DIST * 2).length;
-    if (nearbyCount > MAX_NEIGHBORS) continue;
-
-    placed.push(c);
+    placed.push(s);
   }
 
-  //Build and draw traces
+  // Draw
   placed.forEach(p => {
-    const trace = buildTrace(p.x, p.y, p.edge);
+    const trace = buildTrace(p.x, p.y, p.edge, w, h);
+    if (!trace) return;
 
-    //Skip if endpoint lands in content zone
     const end = trace.points[2];
-    if (inContentZone(end.x, end.y)) return;
+    const mid = trace.points[1];
+
+    // Skip if mid or end lands inside content zone
+    if (inContent(mid.x, mid.y) || inContent(end.x, end.y)) return;
 
     ctx.beginPath();
     ctx.moveTo(trace.points[0].x, trace.points[0].y);
-    trace.points.slice(1).forEach(pt => ctx.lineTo(pt.x, pt.y));
+    ctx.lineTo(mid.x, mid.y);
+    ctx.lineTo(end.x, end.y);
     ctx.strokeStyle = '#0ea5c9';
     ctx.lineWidth = 1.5;
     ctx.globalAlpha = 0.65;
     ctx.stroke();
 
     if (trace.hasPad) {
-      const pad = trace.points[2];
       ctx.beginPath();
-      ctx.arc(pad.x, pad.y, 4.5, 0, Math.PI * 2);
+      ctx.arc(end.x, end.y, 4, 0, Math.PI * 2);
       ctx.fillStyle = '#0ea5c9';
       ctx.globalAlpha = 0.9;
       ctx.fill();
