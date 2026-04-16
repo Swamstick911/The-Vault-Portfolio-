@@ -25,87 +25,58 @@
 <script>
 const canvas = document.getElementById('tracesCanvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d')!;
+const MIN_DIST = 130;
+const MAX_NEIGHBORS = 1;
+const MARGIN = 80;
+const MAX_TRACES = 11;
+const EDGE_OFFSET = 15;
 
 function rand(min: number, max: number) {
   return Math.random() * (max - min) + min;
 }
 
-interface Trace {
-  points: {x: number, y: number}[];
-  padAt: number; // index of point that gets a pad circle
+function dist(x1: number, y1: number, x2: number, y2: number) {
+  return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 }
 
-function generateTraces(w: number, h: number): Trace[] {
-  const traces: Trace[] = [];
+interface TracePoint { x: number; y: number}
+interface Trace {
+  points: TracePoint[];
+  hasPad: boolean;
+}
 
-  // Zone definitions: each zone has anchor + direction templates
-  const zones = [
-    // Top-left: traces come from left edge going right
-    ...Array.from({length: 3}, () => {
-      const y = rand(60, h * 0.35);
-      const x1 = rand(0, 60);
-      const diagLen = rand(40, 80);
-      const horizLen = rand(60, 140);
-      return {
-        points: [
-          {x: x1, y},
-          {x: x1 + diagLen, y: y + diagLen * 0.7},
-          {x: x1 + diagLen + horizLen, y: y + diagLen * 0.7}
-        ],
-        padAt: 2
-      };
-    }),
+function buildTrace(sx: number, sy: number, edge: string): Trace {
+  const diagLen = rand(60, 110);      // longer diagonal
+  const straightLen = rand(120, 220); // much longer straight run
+  const goRight = Math.random() > 0.5;
+  const hasPad = Math.random() > 0.45;
 
-    // Top-right: traces come from right edge going left
-    ...Array.from({length: 3}, () => {
-      const y = rand(50, h * 0.3);
-      const x1 = rand(w - 60, w);
-      const diagLen = rand(40, 80);
-      const horizLen = rand(60, 140);
-      return {
-        points: [
-          {x: x1, y},
-          {x: x1 - diagLen, y: y + diagLen * 0.7},
-          {x: x1 - diagLen - horizLen, y: y + diagLen * 0.7}
-        ],
-        padAt: 2
-      };
-    }),
+  let start: TracePoint, mid: TracePoint, end: TracePoint;
 
-    // Right-edge: traces go downward
-    ...Array.from({length: 3}, () => {
-      const x = rand(w - 80, w);
-      const y1 = rand(h * 0.3, h * 0.65);
-      const diagLen = rand(40, 70);
-      const vertLen = rand(60, 120);
-      return {
-        points: [
-          {x, y: y1},
-          {x: x - diagLen * 0.7, y: y1 + diagLen},
-          {x: x - diagLen * 0.7, y: y1 + diagLen + vertLen}
-        ],
-        padAt: 2
-      };
-    }),
+  switch (edge) {
+    case 'top':
+      start = { x: sx, y: EDGE_OFFSET };
+      mid   = { x: sx + (goRight ? diagLen : -diagLen), y: EDGE_OFFSET + diagLen };
+      end   = { x: mid.x, y: mid.y + straightLen };
+      break;
+    case 'bottom':
+      start = { x: sx, y: canvas.height - EDGE_OFFSET };
+      mid   = { x: sx + (goRight ? diagLen : -diagLen), y: canvas.height - EDGE_OFFSET - diagLen };
+      end   = { x: mid.x, y: mid.y - straightLen };
+      break;
+    case 'right':
+      start = { x: canvas.width - EDGE_OFFSET, y: sy };
+      mid   = { x: canvas.width - EDGE_OFFSET - diagLen, y: sy + (goRight ? diagLen : -diagLen) };
+      end   = { x: mid.x - straightLen, y: mid.y };
+      break;
+    default: // left
+      start = { x: EDGE_OFFSET, y: sy };
+      mid   = { x: EDGE_OFFSET + diagLen, y: sy + (goRight ? diagLen : -diagLen) };
+      end   = { x: mid.x + straightLen, y: mid.y };
+      break;
+  }
 
-    // Bottom: traces come from bottom edge going up
-    ...Array.from({length: 3}, () => {
-      const x = rand(w * 0.2, w * 0.75);
-      const y1 = h;
-      const diagLen = rand(40, 70);
-      const horizLen = rand(60, 120);
-      return {
-        points: [
-          {x, y: y1},
-          {x: x + diagLen * 0.7, y: y1 - diagLen},
-          {x: x + diagLen * 0.7 + horizLen, y: y1 - diagLen}
-        ],
-        padAt: 2
-      };
-    }),
-  ];
-
-  return zones;
+  return { points: [start, mid, end], hasPad };
 }
 
 function drawTraces() {
@@ -113,24 +84,81 @@ function drawTraces() {
   canvas.height = window.innerHeight;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const traces = generateTraces(canvas.width, canvas.height);
+  const w = canvas.width;
+  const h = canvas.height;
+  const MIN_DIST = 130; //min distance between two start points
+  const MAX_NEIGHBORS = 1; //max 1 other trace within 2x MAX_DIST 
+  const MARGIN = 100; //stay away from corners
+  const MAX_TRACES = 11;
 
-  traces.forEach(trace => {
+  //Protected content zone
+  const contentZone = {
+    x1: 0, y1: h * 0.15,
+    x2: w * 0.65, y2: h * 0.75
+  };
+
+  function inContentZone(x: number, y: number) {
+    return x > contentZone.x1 && x < contentZone.x2 && y > contentZone.y1 && y < contentZone.y2; 
+  }
+
+  //Generate candidates spread across all 4 edges
+  type Candidate = {x: number, y: number, edge: string};
+  const candidates: Candidate[] = [];
+
+  const steps = 25;
+  for (let i = 0; i < steps; i++) {
+    const t = i/steps;
+    candidates.push({x: MARGIN + t * (w - MARGIN * 2), y: 0, edge: 'top'});
+    candidates.push({x: MARGIN + t * (w - MARGIN * 2), y: h, edge: 'bottom'});
+    candidates.push({x: w, y: MARGIN + t * (h - MARGIN * 2), edge: 'right'});
+    candidates.push({x: 0, y: MARGIN + t * (h - MARGIN * 2), edge: 'left'});
+  }
+
+  //Shuffle
+  candidates.sort(() => Math.random() - 0.5);
+
+  const placed: Candidate[] = [];
+
+  for (const c of candidates) {
+    if (placed.length >= MAX_TRACES) break;
+
+    //Check min distance
+    const tooClose = placed.some(p => dist(p.x, p.y, c.x, c.y) < MIN_DIST);
+    if (tooClose) continue;
+
+    //Max 1 neighbor within 2x MIN_DIST
+    const nearbyCount = placed.filter(p => dist(p.x, p.y, c.x, c.y) < MIN_DIST * 2).length;
+    if (nearbyCount > MAX_NEIGHBORS) continue;
+
+    placed.push(c);
+  }
+
+  //Build and draw traces
+  placed.forEach(p => {
+    const trace = buildTrace(p.x, p.y, p.edge);
+
+    //Skip if endpoint lands in content zone
+    const end = trace.points[2];
+    if (inContentZone(end.x, end.y)) return;
+
     ctx.beginPath();
     ctx.moveTo(trace.points[0].x, trace.points[0].y);
-    trace.points.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+    trace.points.slice(1).forEach(pt => ctx.lineTo(pt.x, pt.y));
     ctx.strokeStyle = '#0ea5c9';
     ctx.lineWidth = 1.5;
-    ctx.globalAlpha = 0.7;
+    ctx.globalAlpha = 0.65;
     ctx.stroke();
 
-    // Draw pad circle at end
-    const pad = trace.points[trace.padAt];
-    ctx.beginPath();
-    ctx.arc(pad.x, pad.y, 5, 0, Math.PI * 2);
-    ctx.fillStyle = '#0ea5c9';
-    ctx.globalAlpha = 0.9;
-    ctx.fill();
+    if (trace.hasPad) {
+      const pad = trace.points[2];
+      ctx.beginPath();
+      ctx.arc(pad.x, pad.y, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#0ea5c9';
+      ctx.globalAlpha = 0.9;
+      ctx.fill();
+    }
+
+    ctx.globalAlpha = 1;
   });
 }
 
