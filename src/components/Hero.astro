@@ -1,5 +1,56 @@
 ---
 ---
+<script>
+import { gsap } from 'gsap';
+import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
+
+gsap.registerPlugin(MotionPathPlugin);
+
+// Get all traces
+const traces = document.querySelectorAll('.trace') as NodeListOf<SVGPolylineElement>;
+
+traces.forEach((trace, i) => {
+  // Create a pulse dot for each trace
+  const svg = trace.closest('svg')!;
+  const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  dot.setAttribute('r', '3');
+  dot.setAttribute('fill', '#ffffff');
+  dot.style.filter = 'drop-shadow(0 0 6px #0ea5c9) drop-shadow(0 0 12px #0ea5c9)';
+  dot.style.opacity = '0';
+  svg.appendChild(dot);
+
+  // Get the total length of the polyline for positioning
+  const points = trace.getAttribute('points')!
+    .trim().split(' ')
+    .map(p => {
+      const [x, y] = p.split(',').map(Number);
+      return { x, y };
+    });
+
+  // Animate dot along the points with a random delay
+  function pulse() {
+    const delay = Math.random() * 4; // 0–4s random delay between pulses
+    const duration = 1.2 + Math.random() * 0.8; // 1.2–2s travel time
+
+    gsap.set(dot, { x: points[0].x, y: points[0].y, opacity: 0 });
+
+    gsap.timeline({ delay, onComplete: pulse })
+      .to(dot, { opacity: 1, duration: 0.1 })
+      .to(dot, {
+        motionPath: {
+          path: points.map(p => ({ x: p.x, y: p.y })),
+          type: 'linear'
+        },
+        duration,
+        ease: 'power1.inOut'
+      })
+      .to(dot, { opacity: 0, duration: 0.15 }, `-=0.15`);
+  }
+
+  // Stagger start times so they don't all fire at once
+  setTimeout(() => pulse(), i * 600 + Math.random() * 1000);
+});
+</script>
 <section class="hero" id="home">
   <div class="pcb-bg"></div>
   <svg
@@ -9,22 +60,22 @@
     xmlns="http://www.w3.org/2000/svg"
   >
     <!--Top left -->
-    <polyline points="0,140 400,140 400,100" class="trace"/>
-    <polyline points="10,200 150,200 200,250" class="trace" />
+    <polyline id="t1" points="0,140 400,140 400,100" class="trace"/>
+    <polyline id="t2" points="10,200 150,200 200,250" class="trace" />
 
     <!--Top right -->
-    <polyline points="870,200 800,250 800,400" class="trace"/>
-    <circle cx="800" cy="400" r="5" class="pad"/>
-    <polyline points="1025,140 1100,200 1300,200" class="trace"/>
-    <circle cx="1300" cy="200" r="5" class="pad"/>
+    <polyline id="t3" points="870,200 800,250 800,400" class="trace"/>
+    <circle id="p1" cx="800" cy="400" r="5" class="pad"/>
+    <polyline id="t4" points="1025,140 1100,200 1300,200" class="trace"/>
+    <circle id="p2" cx="1300" cy="200" r="5" class="pad"/>
 
     <!--Right -->
-    <polyline points="1250,400 1300,450 1300,600" class="trace"/>
-    <polyline points="1310,500 1310,650" class="trace"/>
+    <polyline id="t5" points="1250,400 1300,450 1300,600" class="trace"/>
+    <polyline id="t6" points="1310,500 1310,650" class="trace"/>
 
     <!--Bottom -->
-    <polyline points="550,700 850,700" class="trace"/>
-    <polyline points="450,740 500,710 650,710 " class="trace"/>
+    <polyline id="t7" points="550,700 850,700" class="trace"/>
+    <polyline id="t8" points="450,740 500,710 650,710 " class="trace"/>
   </svg>
 
   <div class="hero-content">
@@ -74,11 +125,13 @@
     stroke-linecap: round;
     stroke-linejoin: round;
     opacity: 0.7;
+    filter: drop-shadow(0 0 3px #0ea5c9) drop-shadow(0 0 6px rgba(14,165,201,0.4));
   }
 
   .pad {
     fill: #0ea5c9;
     opacity: 0.9;
+    filter: drop-shadow(0 0 4px #0ea5c9) drop-shadow(0 0 10px rgba(14,165,201,0.5));
   }
 
   .hero-content {
