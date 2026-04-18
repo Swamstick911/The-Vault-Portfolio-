@@ -2,53 +2,106 @@
 ---
 <script>
 import { gsap } from 'gsap';
-import { MotionPathPlugin } from 'gsap/MotionPathPlugin';
 
-gsap.registerPlugin(MotionPathPlugin);
-
-// Get all traces
+const svg = document.querySelector('.traces') as SVGSVGElement;
 const traces = document.querySelectorAll('.trace') as NodeListOf<SVGPolylineElement>;
 
-traces.forEach((trace, i) => {
-  // Create a pulse dot for each trace
-  const svg = trace.closest('svg')!;
-  const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  dot.setAttribute('r', '3');
-  dot.setAttribute('fill', '#ffffff');
-  dot.style.filter = 'drop-shadow(0 0 6px #0ea5c9) drop-shadow(0 0 12px #0ea5c9)';
-  dot.style.opacity = '0';
-  svg.appendChild(dot);
-
-  // Get the total length of the polyline for positioning
-  const points = trace.getAttribute('points')!
-    .trim().split(' ')
+function parsePoints(trace: SVGPolylineElement) {
+  return trace.getAttribute('points')!
+    .trim()
+    .split(/\s+/)
     .map(p => {
       const [x, y] = p.split(',').map(Number);
       return { x, y };
     });
+}
 
-  // Animate dot along the points with a random delay
-  function pulse() {
-    const delay = Math.random() * 4; // 0–4s random delay between pulses
-    const duration = 1.2 + Math.random() * 0.8; // 1.2–2s travel time
+function segmentLengths(pts: {x:number,y:number}[]) {
+  return pts.slice(1).map((p, i) => {
+    const dx = p.x - pts[i].x;
+    const dy = p.y - pts[i].y;
+    return Math.sqrt(dx * dx + dy * dy);
+  });
+}
 
-    gsap.set(dot, { x: points[0].x, y: points[0].y, opacity: 0 });
+function totalLength(lens: number[]) {
+  return lens.reduce((a, b) => a + b, 0);
+}
 
-    gsap.timeline({ delay, onComplete: pulse })
-      .to(dot, { opacity: 1, duration: 0.1 })
-      .to(dot, {
-        motionPath: {
-          path: points.map(p => ({ x: p.x, y: p.y })),
-          type: 'linear'
-        },
-        duration,
-        ease: 'power1.inOut'
-      })
-      .to(dot, { opacity: 0, duration: 0.15 }, `-=0.15`);
+//Get exact pos at a given distance along the polyline
+function posAtDist(pts: {x:number,y:number}[], lens: number[], dist: number) {
+  let remaining = dist;
+  for (let i = 0; i < lens.length; i++) {
+    if (remaining <= lens[i]) {
+      const t = remaining / lens[i];
+      return {
+        x: pts[i].x + t * (pts[i+1].x - pts[i].x),
+        y: pts[i].y + t * (pts[i+1].y - pts[i].y)
+      };
+    }
+    remaining -= lens[i];
   }
+  return pts[pts.length - 1];
+}
 
-  // Stagger start times so they don't all fire at once
-  setTimeout(() => pulse(), i * 600 + Math.random() * 1000);
+function createDot() {
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('stroke', '#a8eeff');
+  line.setAttribute('stroke-width', '1.5');
+  line.setAttribute('stroke-linecap', 'round');
+  line.style.filter = 'drop-shadow(0 0 4px #0ea5c9) drop-shadow(0 0 10px rgba(14,165,201,0.8))';
+  line.style.opacity = '0';
+  svg.appendChild(line);
+  return line as unknown as SVGCircleElement;
+}
+
+function animateDot(dot: SVGCircleElement, pts: {x:number,y:number}[], lens: number[], total: number, duration: number) {
+  //Use a proxy object to drive the distance value
+  const proxy = { dist: 0 };
+
+  gsap.set(dot, { opacity: 0 });
+
+  gsap.timeline({
+    onComplete: () => {
+      //Random pause before next pulse [2-6sec]
+      const pause = 2 + Math.random() * 4;
+      setTimeout(() => animateDot(dot, pts, lens, total, duration), pause * 1000);
+    }
+  })
+  .to(dot, { opacity: 1, duration: 0.2, ease: 'none' })
+  .to(proxy, {
+    dist: total,
+    duration,
+    ease: 'power1.inOut',
+    onUpdate: () => {
+      const TAIL = 18; // length of the glowing segment in px
+      const pos = posAtDist(pts, lens, proxy.dist);
+      const tailDist = Math.max(0, proxy.dist - TAIL);
+      const tail = posAtDist(pts, lens, tailDist);
+
+      (dot as unknown as SVGLineElement).setAttribute('x1', String(tail.x));
+      (dot as unknown as SVGLineElement).setAttribute('y1', String(tail.y));
+      (dot as unknown as SVGLineElement).setAttribute('x2', String(pos.x));
+      (dot as unknown as SVGLineElement).setAttribute('y2', String(pos.y));
+    }
+  })
+  .to(dot, { opacity: 0, duration: 0.2, ease: 'none' }, `-=0.2`);
+}
+
+traces.forEach((trace, i) => {
+  const pts = parsePoints(trace);
+  const lens = segmentLengths(pts);
+  const total = totalLength(lens);
+
+  //Variable speed - shorter traces = faster, and longer traces = slower
+  //Range- 1.5s-4s
+  const duration = 1.5 + (total / 800) * 2.5;
+
+  const dot = createDot();
+
+  //Stagger initial start- each trace waits i*0.8s + small random offset
+  const initialDelay = i * 0.8 + Math.random() * 1.5;
+  setTimeout(() => animateDot(dot, pts, lens, total, duration), initialDelay * 1000);
 });
 </script>
 <section class="hero" id="home">
