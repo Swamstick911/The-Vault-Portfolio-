@@ -52,6 +52,19 @@ body {
     font-size: var(--text-base);
     line-height: 1.6;
     overflow-x: hidden;
+    position: relative;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url('../assets/pcb.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.04;
+    z-index: -1;
 }
 
 h1, h2, h3 {

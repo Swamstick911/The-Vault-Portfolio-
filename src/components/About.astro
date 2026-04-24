@@ -16,17 +16,20 @@
         </a>
     </div>
 
+
     <!--Bio -->
     <p class="about-bio">
         I am a 15-year old based in Kanpur, India. I sit at the intersection of AI, Hardware and Web development.
         Currently really obsessed with Keyboard designing and CV (Computer Vision). This is the tech stack:
     </p>
 
+
     <!--Cards -->
     <div class="cards-scene">
         <svg class="deco deco-left" width="50" height="160" viewBox="0 0 50 160" fill="none">
             <polyline points="40,10 15,10 8,17 8,143 15,150 40,150" stroke="var(--trace)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
+
 
         <!--Hardware and software cards -->
         <div class="stack-cards">
@@ -52,12 +55,14 @@
             </div>
         </div>
 
+
         <svg class="deco deco-right" width="80" height="160" viewBox="0 0 80 160" fill="none">
             <polyline points="8,80 60,80" stroke="var(--trace)" stroke-width="1.5" stroke-linecap="round"/>
             <circle cx="70" cy="80" r="7" fill="var(--trace)" opacity="0.9"/>
             <circle cx="70" cy="80" r="12" fill="var(--trace)" opacity="0.15"/>
         </svg>
     </div>
+
 
     <div class="deco-bottom">
         <svg width="320" height="40" viewBox="0 0 320 40" fill="none">
@@ -68,23 +73,29 @@
     </div>
 </section>
 
+
 <style>
     .about {
         min-height: 100vh;
         display: flex;
         flex-direction: column;
         justify-content: center;
+        align-items: flex-start;
         padding: var(--space-20) var(--space-12);
         max-width: 960px;
-        margin-inline: auto;
+        margin-inline: 0;
+        padding: var(--space-24) var(--space-8);
     }
+
 
     .about-top {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
+        width: 100%;
         margin-bottom: var(--space-6);
     }
+
 
     .about-heading {
         font-size: var(--text-hero);
@@ -93,6 +104,7 @@
         line-height: 1;
         margin: 0;
     }
+
 
     .github-link {
         display: flex;
@@ -105,9 +117,11 @@
         transition: color 180ms ease;
     }
 
+
     .github-link:hover {
         color: var(--trace);
     }
+
 
     .about-bio {
         font-size: var(--text-base);
@@ -117,11 +131,14 @@
         max-width: 72ch;
     }
 
+
     .cards-scene {
         display: flex;
         align-items: center;
         gap: var(--space-4);
+        justify-content: flex-start;
     }
+
 
     .stack-cards {
         display: flex;
@@ -130,10 +147,11 @@
         justify-content: center;
     }
 
+
     .stack-card {
         flex: 1;
         max-width: 260px;
-        bacgkground: rgba(8, 12, 18, 0.6);
+        background: rgba(8, 12, 18, 0.6);
         border: 1.5px solid var(--trace);
         border-radius: 24px;
         padding: var(--space-8);
@@ -141,14 +159,82 @@
         transition: box-shadow 200ms ease, transform 200ms ease;
     }
 
+
     .stack-card:hover {
         box-shadow: 0 0 32px rgba(14, 165, 201, 0.2), inset 0 0 24px rgba(14, 165, 201, 0.06);
         transform: translateY(-3px);
     }
 
+
     .card-title {
         font-size: var(--text-xl);
         font-family: var(--font-display);
-        
+        color: var(--text);
+        text-align: center;
+        margin-bottom: var(--space-6);
+        font-weight: 600;
+    }
+
+
+    .stack-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+    }
+
+
+    .stack-list li {
+        font-size: var(--text-sm);
+        color: var(--text-muted);
+        padding-left: var(--space-6);
+        position: relative;
+    }
+
+
+    .stack-list li::before {
+        content: '';
+        position: absolute;
+        left: var(--space-2);
+        top: 50%;
+        transform: translateY(-50%);
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--trace);
+        box-shadow: 0 0 6px var(--trace);
+    }
+
+
+    .deco-left, .deco-right {
+        flex-shrink: 0;
+    }
+
+
+    .deco-bottom {
+        display: flex;
+        justify-content: center;
+        margin-top: var(--space-8);
+    }
+
+
+    @media (max-width: 768px) {
+        .about-top {
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+
+
+        .stack-cards {
+            flex-direction: column;
+            align-items: center;
+        }
+
+
+        .deco-left, .deco-right {
+            display: none;
+        }
     }
 </style>
