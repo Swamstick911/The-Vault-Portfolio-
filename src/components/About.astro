@@ -1,0 +1,154 @@
+---
+---
+<section id="about" class="about">
+    <!--Top row -->
+    <div class="about-top">
+        <h2 class="about-heading">About Me</h2>
+        <a href="https://github.com/Swamstick911" target="_blank" rel="noopener noreferrer" class="github-link">
+            <span>Check out my GitHub!</span>
+            <svg class="arrow" width="60" height="30" viewBox="0 0 60 30" fill="none">
+                <polyline points="0,20 50,8" stroke="var(--trace)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <polyline points="44,4 52,10 42,12" stroke="var(--trace)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="var(--trace)" aria-label="GitHub">
+                <path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+            </svg>
+        </a>
+    </div>
+
+    <!--Bio -->
+    <p class="about-bio">
+        I am a 15-year old based in Kanpur, India. I sit at the intersection of AI, Hardware and Web development.
+        Currently really obsessed with Keyboard designing and CV (Computer Vision). This is the tech stack:
+    </p>
+
+    <!--Cards -->
+    <div class="cards-scene">
+        <svg class="deco deco-left" width="50" height="160" viewBox="0 0 50 160" fill="none">
+            <polyline points="40,10 15,10 8,17 8,143 15,150 40,150" stroke="var(--trace)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+
+        <!--Hardware and software cards -->
+        <div class="stack-cards">
+            <div class="stack-card">
+                <h3 class="card-title">Hardware</h3>
+                <ul class="stack-list">
+                    <li>KiCAD</li>
+                    <li>Onshape</li>
+                    <li>Circuit Design</li>
+                    <li>Micropython</li>
+                    <li>Raspberry Pi Pico</li>
+                </ul>
+            </div>
+            <div class="stack-card">
+                <h3 class="card-title">Software</h3>
+                <ul class="stack-list">
+                    <li>Python</li>
+                    <li>JavaScript/TypeScript</li>
+                    <li>TailwindCSS</li>
+                    <li>GSAP</li>
+                    <li>Next.js</li>
+                </ul>
+            </div>
+        </div>
+
+        <svg class="deco deco-right" width="80" height="160" viewBox="0 0 80 160" fill="none">
+            <polyline points="8,80 60,80" stroke="var(--trace)" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="70" cy="80" r="7" fill="var(--trace)" opacity="0.9"/>
+            <circle cx="70" cy="80" r="12" fill="var(--trace)" opacity="0.15"/>
+        </svg>
+    </div>
+
+    <div class="deco-bottom">
+        <svg width="320" height="40" viewBox="0 0 320 40" fill="none">
+            <polyline points="320, 8 180,8 162,20 20,20" stroke="var(--trace)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="10" cy="20" r="7" fill="var(--trace)" opacity="0.9"/>
+            <circle cx="10" cy="20" r="12" fill="var(--trace)" opacity="0.15"/>
+        </svg>
+    </div>
+</section>
+
+<style>
+    .about {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: var(--space-20) var(--space-12);
+        max-width: 960px;
+        margin-inline: auto;
+    }
+
+    .about-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: var(--space-6);
+    }
+
+    .about-heading {
+        font-size: var(--text-hero);
+        font-family: var(--font-display);
+        color: var(--text);
+        line-height: 1;
+        margin: 0;
+    }
+
+    .github-link {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        text-decoration: none;
+        color: var(--text-muted);
+        font-size: var(--text-sm);
+        margin-top: var(--space-4);
+        transition: color 180ms ease;
+    }
+
+    .github-link:hover {
+        color: var(--trace);
+    }
+
+    .about-bio {
+        font-size: var(--text-base);
+        color: var(--text-muted);
+        line-height: 1.75;
+        margin-bottom: var(--space-12);
+        max-width: 72ch;
+    }
+
+    .cards-scene {
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+    }
+
+    .stack-cards {
+        display: flex;
+        gap: var(--space-6);
+        flex: 1;
+        justify-content: center;
+    }
+
+    .stack-card {
+        flex: 1;
+        max-width: 260px;
+        bacgkground: rgba(8, 12, 18, 0.6);
+        border: 1.5px solid var(--trace);
+        border-radius: 24px;
+        padding: var(--space-8);
+        box-shadow: 0 0 18px rgba(14, 165, 201, 0.1), inset 0 0 24px rgba(14, 165, 201, 0.03);
+        transition: box-shadow 200ms ease, transform 200ms ease;
+    }
+
+    .stack-card:hover {
+        box-shadow: 0 0 32px rgba(14, 165, 201, 0.2), inset 0 0 24px rgba(14, 165, 201, 0.06);
+        transform: translateY(-3px);
+    }
+
+    .card-title {
+        font-size: var(--text-xl);
+        font-family: var(--font-display);
+        
+    }
+</style>
