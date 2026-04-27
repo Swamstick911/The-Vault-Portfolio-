@@ -3,8 +3,8 @@
 <script>
 import { gsap } from 'gsap';
 
-const svg = document.querySelector('.traces') as SVGSVGElement;
-const traces = document.querySelectorAll('.trace') as NodeListOf<SVGPolylineElement>;
+const svg = document.querySelector('.hero-traces') as SVGSVGElement;
+const traces = svg.querySelectorAll('.trace') as NodeListOf<SVGPolylineElement>;
 
 function parsePoints(trace: SVGPolylineElement) {
   return trace.getAttribute('points')!
@@ -107,7 +107,7 @@ traces.forEach((trace, i) => {
 <section class="hero" id="home">
   <div class="pcb-bg"></div>
   <svg
-    class="traces"
+    class="traces hero-traces"
     viewBox="0 0 1440 900"
     preserveAspectRatio="xMidYMid slice"
     xmlns="http://www.w3.org/2000/svg"
