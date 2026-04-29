@@ -27,8 +27,177 @@
                         <span class="keycap-name">Forxa</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="keycap-arrow"><path d="M7 17L17 7M17 7HM17 7v10"/></svg>
                     </div>
+                    <p class="keycap-desc">Custom 68-key mechanical keyboard with PCB, switches and CAD from scratch!</p>
+                    <div class="keycap-tags">
+                        <span class="tag">KiCAD</span>
+                        <span class="tag">STM32</span>
+                        <span class="tag">Onshape</span>
+                    </div>
                 </div>
+                <div class="keycap-side"></div>
             </a>
+            <!--ShelbyOS - 2u -->
+            <a href="https://github.com/Swamstick911/Shelby" target="_blank" rel="noopener noreferrer" class="keycap keycap-2u">
+                <div class="keycap-top">
+                    <div class="keycap-legend">
+                        <span class="keycap-name">Shelby OS</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="keycap-arrow"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+                    </div>
+                    <p class="keycap-desc">Desk companion firmware for Hack Club Sprig with Clock, github, music, much more..</p>
+                    <div class="keycap-tags">
+                        <span class="tag">MicroPython</span>
+                        <span class="tag">RP2040</span>
+                        <span class="tag">Sprig</span>
+                    </div>
+                </div>
+                <div class="keycap-side"></div>
+            </a>
+
+            <!--GazePilot - 1.5u -->
+            <a href="https://github.com/Swamstick911/GazePilot" target="_blank" rel="noopener noreferrer" class="keycap keycap-1u">
+                <div class="keycap-top">
+                    <div class="keycap-legend">
+                        <span class="keycap-name">GazePilot</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="keycap-arrow"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+                    </div>  
+                    <p class="keycap-desc">Control your PC with eye tracking and hand gestures</p>
+                    <div class="keycap-tags">
+                        <span class="tag">MediaPipe</span>
+                        <span class="tag">OpenCV</span>
+                        <span class="tag">Python</span>
+                    </div>
+                </div>
+                <div class="keycap-side"></div>
+            </a>
+
+            <!--Grindline - 1.5u -->
+            <a href="https://github.com/Swamstick911/grindline" target="_blank" rel="noopener noreferrer" class="keycap keycap-1u">
+                <div class="keycap-top">
+                    <div class="keycap-legend">
+                        <span class="keycap-name">Grindline</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="keycap-arrow"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+                    </div>
+                    <p class="keycap-desc">Comeback planner for students - streaks, tasks, Pomodoro, XP</p>
+                    <div class="keycap-tags">
+                        <span class="tag">React</span>
+                        <span class="tag">GSAP</span>
+                        <span class="tag">Tailwind</span>
+                    </div>
+                </div>
+                <div class="keycap-side"></div>
+            </a>
+        </div>
+
+        <!--More links -->
+        <a href="https://github.com/Swamstick911" target="_blank" rel="noopener noreferrer" class="more-link">
+            more like this..
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+        </a>
+
+        <!--Hackatime -->
+        <div class="hackatime">
+            <h3 class="hackatime-heading">Time spent on top projects</h3>
+            <div class="hackatime-badge">
+                <img src="https://hacaktime-badge.hackclub.com/U06PUN13XHT/interval:any" alt="Hackatime stats" loading="lazy"/>
+            </div>
         </div>
     </div>
 </section>
+
+<script>
+import { gsap } from "gsap";
+
+//Keycap press animation
+const keycaps = document.querySelectorAll('.keycap') as NodeListOf<HTMLElement>;
+
+keycaps.forEach(keycap => {
+    const top = keycap.querySelector('.keycap-top') as HTMLElement;
+    const side = keycap.querySelector('.keycap-side') as HTMLElement;
+
+    keycap.addEventListener('mouseenter', () => {
+        gsap.to(top, { y: 6, duration: 0.1, ease: 'power2.out' });
+        gsap.to(side, { scaleY: 0.3, transformOrigin: 'top', duration: 0.12, ease: 'power2.out' });
+    });
+
+    keycap.addEventListener('mouseleave', () => {
+        gsap.to(top, { y: 0, duration: 0.18, ease:'power2.out' });
+        gsap.to(side, { scaleY: 1, transformOrigin: 'top', duration: 0.18, ease: 'power2.out'});
+    });
+});
+
+//Trace animation
+const svg = document.querySelector('.work-traces') as SVGSVGElement;
+const traces = svg.querySelectorAll('.trace') as NodeListOf<SVGPolylineElement>;
+
+function parsePoints(trace: SVGPolylineElement) {
+    return trace.getAttribute('.points')!.trim().split(/\+s/).map(p => {
+        const [x, y] = p.split(',').map(Number);
+        return { x, y };
+    });
+}
+
+function segmentLengths(pts: {x:number, y:number}[]) {
+    return pts.slice(1).map((p, i) => {
+        const dx = p.x - pts[i].x;
+        const dy = p.y - pts[i].y;
+        return Math.sqrt(dx * dx + dy * dy);
+    });
+}
+
+function totalLength(lens: number[]) {
+    return lens.reduce((a, b) => a + b, 0);
+}
+
+function posAtDist(pts: {x:number, y:number}[], lens: number[], dist: number) {
+    let remaining = dist;
+    for (let i = 0; i < lens.length; i++) {
+        if (remaining <= lens[i]) {
+            const t = remaining / lens[i];
+            return { x: pts[i].x + t * (pts[i+1].x - pts[i].x), y: pts[i].y + t * (pts[i+1].y - pts[i].y) };
+        }
+        remaining -= lens[i];
+    }
+    return pts[pts.length - 1];
+}
+
+function createDot() {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('stroke', '#a8eeff');
+    line.setAttribute('stroke-width', '1.5');
+    line.setAttribute('stroke-linecap', 'round');
+    line.style.filter = 'drop-shadow( 0 0 4px #0ea5c9) drop-shadow(0 0 10px rgba(14,165,201,0.8))';
+    line.style.opacity = '0';
+    svg.appendChild(line);
+    return line as unknown as SVGCircleElement;
+}
+
+let timeouts: ReturnType<typeof setTimeout>[] = [];
+let running = false;
+
+function animateDot(dot: SVGCircleElement, pts: {x:number, y:number}[], lens: number[], total: number, duration: number) {
+    if (!running) return;
+    const proxy = { dist: 0 };
+    gsap.set(dot, { opacity: 0 });
+    gsap.timeline({
+        onComplete: () => {
+            if (!running) return;
+            const pause = 2 + Math.random() * 4;
+            const id = setTimeout(() => animateDot(dot, pts, lens, total, duration), pause * 1000);
+            timeouts.push(id);
+        }
+    })
+    .to(dot, { opacity: 1, duration: 0.2, ease: 'none' })
+    .to(proxy, { 
+        dist: total, duration, ease: 'power1.inOut',
+        onUpdate: () => {
+            const TAIL = 18;
+            const pos = posAtDist(pts, lens, proxy.dist);
+            const tail = posAtDist(pts, lens, Math.max(0, proxy.dist - TAIL));
+            (dot as unknown as SVGLineElement).setAttribute('x1', String(tail.x));
+            (dot as unknown as SVGLineElement).setAttribute('y1', String(tail.y));
+            (dot as unknown as SVGLineElement).setAttribute('x2', String(pos.x));
+            (dot as unknown as SVGLineElement).setAttribute('y2', String(pos.y));
+        }
+    })
+}
+</script>
