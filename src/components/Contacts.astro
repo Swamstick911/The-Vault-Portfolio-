@@ -1,0 +1,238 @@
+---
+---
+<section id="contact" class="contact">
+    <svg class="traces contact-traces" viewBox="0 0 1440 500" preserveAspectRatio="xMidYMid slice" xmlns="https://www.w3.org/2000/svg">
+        <polyline points="0,120 80,120 120,80" class="trace"/>
+        <polyline points="120,80 200,80" class="trace"/>
+        <polyline points="1440,80 1360,80 1320,120 1320,200" class="trace"/>
+        <polyline points="1440,300 1340,300 1280,360 1280,420" class="trace"/>
+        <polyline points="900,500 900,420 940,380 1060,380" class="trace"/>
+        <circle cx="1060" cy="380" r="5" class="pad"/>
+        <polyline points="0,400 100,400 140,360 260,360" class="trace"/>
+        <circle cx="260" cy="360" r="5" class="pad"/>
+    </svg>
+
+    <div class="contact-inner">
+        <h1 class="contact-heading">Contact Me!</h1>
+        <div class="contact-trace-row">
+            <svg width="120" height="24" viewBox="0 0 120 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polyline points="0,12 90,12 108,4" stroke="#0ea5c9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 3px #0ea5c9) drop-shadow(0 0 8px rgba(14,165,201,0.5))"/>
+            </svg>
+            <div class="contact-pad"></div>
+        </div>
+
+        <div class="contact-links">
+            <a href="mailto:swastikbajpaii17969@gmail.com" class="content-item">
+                <span class="contact-label">Email</span>
+                <span class="contact-sep">-</span>
+                <span class="contact-value">swastikbajpaii17969@gmail.com</span>
+            </a>
+            <a href="https://github.com/Swamstick911" target="_blank" rel="noopener noreferrer" class="contact-item">
+                <span class="contact-label">GitHub</span>
+                <span class="contact-sep">-</span>
+                <span class="contact-value">Swamstick911</span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="contact-arrow">
+                    <path d="M7 17L17 7M17 7H7M17 7v10"/>    
+                </svg>   
+            </a>
+        </div>
+    </div>
+</section>
+
+<script>
+import { gsap } from "gsap";
+
+const svg = document.querySelector('.contact-traces') as SVGSVGElement;
+const traces = svg.querySelectorAll('.trace') as NodeListOf<SVGPolylineElement>;
+
+function parsePoints(trace: SVGPolylineElement) {
+    return trace.getAttribute('points')!.trim().split(/\s+/).map(p => {
+        const [x, y] = p.split(',').map(Number);
+        return { x, y };
+    });
+}
+
+function segmentLength(pts: {x:number, y:number}[]) {
+    return pts.slice(1).map((p, i) => {
+        const dx = p.x - pts[i].x;
+        const dy = p.y - pts[i].y;
+        return Math.sqrt(dx * dx + dy * dy);
+    });
+}
+
+function totalLength(lens: number[]) {
+    return lens.reduce((a, b) => a + b, 0);
+}
+
+function posAtDist(pts: {x:number, y:number}[], lens: number[], dist: number) {
+    let remaining = dist;
+    for (let i = 0; i < lens.length; i++) {
+        if(remaining <= lens[i]) {
+            const t = remaining / lens[i];
+            return { x: pts[i].x + t * (pts[i+1].x - pts[i].x), y: pts[i].y + t * (pts[i+1].y - pts[i].y) };
+        }
+        remaining -= lens[i];
+    }
+    return pts[pts.length - 1];
+}
+
+function createDot() {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('stroke', '#a8eeff');
+    line.setAttribute('stroke-width', '1.5');
+    line.setAttribute('stroke-linecap', 'round');
+    line.style.filter = 'drop-shadow(0 0 3px #0ea5c9) drop-shadow(0 0 10px rgba(14,165,201,0.8))';
+    line.style.opacity = '0';
+    svg.appendChild(line);
+    return line as unknown as SVGCircleElement;
+}
+
+let timeouts: ReturnType<typeof setTimeout>[] = [];
+let running = false;
+
+function animateDot(dot: SVGCircleElement, pts: {x:number, y:number}[], lens: number[], total: number, duration: number) {
+    if (!running) return;
+    const proxy = { dist: 0 };
+    gsap.set(dot, { opactiy: 0 });
+    gsap.timeline({
+        onComplete: () => {
+            if (!running) return;
+            const pause = 2 + Math.random() * 4;
+            const id = setTimeout(() => animateDot(dot, pts, lens, total, duration), pause * 1000);
+            timeouts.push(id);
+        }
+    })
+    .to(dot, { opacity: 1, duration: 0.2, ease: 'none' })
+    .to(proxy, {
+        dist: total, duration, ease: 'power1.inOut',
+        onUpdate: () => {
+            const TAIL = 18;
+            const pos = posAtDist(pts, lens, proxy.dist);
+            const tail = posAtDist(pts, lens, Math.max(0, proxy.dist - TAIL));
+            (dot as unknown as SVGLineElement).setAttribute('x1', String(tail.x));
+            (dot as unknown as SVGLineElement).setAttribute('y1', String(tail.y));
+            (dot as unknown as SVGLineElement).setAttribute('x2', String(pos.x));
+            (dot as unknown as SVGLineElement).setAttribute('y2', String(pos.y));
+        }
+    })
+    .to(dot, { opacity: 0, duration: 0.2, ease: 'none' }, '-=0.2');
+}
+
+const traceData = Array.from(traces).map(trace => ({
+    pts: parsePoints(trace),
+    lens: segmentLength(parsePoints(trace)),
+    dot: createDot(),
+    duration: 0
+}));
+
+traceData.forEach(td => { td.duration = 1.5 + (totalLength(td.lens) / 800) * 2.5; });
+
+function startAll() {
+    if (running) return;
+    running = true;
+    traceData.forEach((td, i) => {
+        const id = setTimeout(() => animateDot(td.dot, td.pts, td.lens, totalLength(td.lens), td.duration), (i * 0.8 + Math.random() * 1.5) * 1000);
+        timeouts.push(id);
+    });
+}
+
+function stopAll() {
+    running = false;
+    timeouts.forEach(id => clearTimeout(id));
+    timeouts = [];
+    gsap.killTweensOf(traceData.map(td => td.dot));
+    traceData.forEach(td => gsap.set(td.dot, { opacity: 0 }));
+}
+
+const section = document.getElementById('contact')!;
+new IntersectionObserver((entries) => {
+    entries.forEach(entry => entry.isIntersecting ? startAll() : stopAll());
+}, { threshold: 0.1 }).observe(section);
+</script>
+
+<style>
+    .contact {
+        min-height: 60vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: var(--space-24) var(--space-8);
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .contact-inner {
+        position: relative;
+        z-index: 1;
+    }
+
+    .contact-heading {
+        font-size: var(--text-hero);
+        font-family: var(--font-display);
+        color: var(--text);
+        line-height: 1;
+        margin-bottom: var(--space-4);
+    }
+
+    .contact-trace-row {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        margin-bottom: var(--space-10);
+    }
+
+    .contact-pad {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--trace);
+        box-shadow: 0 0 3px var(--trace), 0 0 14px rgba(14, 165, 201, 0.6);
+    }
+
+    .contact-links {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+
+    .contact-item {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-3);
+        text-decoration: none;
+        color: var(--text-muted);
+        font-size: var(--text-base);
+        transition: color 180ms ease;
+    }
+
+    .contact-item:hover {
+        color: var(--text);
+    }
+
+    .contact-item:hover .contact-arrow {
+        color: var(--trace);
+        transform: translate(2px, -2px);
+    }
+
+    .contact-label {
+        color: var(--text);
+        font-weight: 500;
+    }
+
+    .contact-sep {
+        color: var(--text-muted);
+        opacity: 0.4;
+    }
+
+    .contact-value {
+        color: var(--text-muted);
+        transition: color 180ms ease;
+    }
+
+    .contact-item:hover .contact-value {
+        color: var(--trace);
+    }
+
+    
+</style>
