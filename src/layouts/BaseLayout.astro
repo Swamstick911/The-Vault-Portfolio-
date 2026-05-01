@@ -1,6 +1,8 @@
 ---
+import '../styles/global.css';
+
 interface Props {
-    title?: string;
+  title?: string;
 }
 const { title = "Swastik Bajpai" } = Astro.props;
 ---
@@ -14,7 +16,6 @@ const { title = "Swastik Bajpai" } = Astro.props;
     <link rel="preconnect" href="https://api.fontshare.com" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="/src/styles/global.css" />
   </head>
   <body>
     <slot />
