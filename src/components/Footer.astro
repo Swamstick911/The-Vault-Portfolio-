@@ -1,0 +1,100 @@
+---
+---
+<footer class="footer">
+    <div class="footer-inner">
+        <div class="footer-left">
+            <span class="footer-name">Swastik Bajpai</span>
+            <span class="footer-sep">.</span>
+            <span class="footer-year">2026</span>
+        </div>
+        <div class="footer-right">
+            <a href="mailto:swastikbajpaii17969@gmail.com" class="footer-link">Email</a>
+            <a href="https://github.com/Swamstick911" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
+        </div>
+    </div>
+    <div class="footer-trace">
+        <div class="footer-line"></div>
+        <div class="footer-pad"></div>
+    </div>
+</footer>
+
+<style>
+    .footer {
+        border-top: 1px solid rgba(14, 165, 201, 0.12);
+        padding: var(--space-8) var(--space-8);
+    }
+
+    .footer-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+    }
+
+    .footer-left {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+    }
+
+    .footer-name {
+        color: var(--text);
+        font-weight: 500;
+    }
+
+    .font-sep {
+        opacity: 0.3;
+    }
+
+    .footer-year {
+        opacity: 0.5;
+    }
+
+    .footer-right {
+        display: flex;
+        align-items: center;
+        gap: var(--space-6);
+    }
+
+    .footer-link {
+        font-size: var(--text-sm);
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: color 180ms ease;
+    }
+
+    .footer-link:hover {
+        color: var(--trace);
+    }
+
+    .footer-trace {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        margin-top: var(--space-6);
+        opacity: 0.4;
+    }
+
+    .footer-line {
+        height: 1px;
+        width: 60px;
+        background: var(--trace);
+        box-shadow: 0 0 4px var(--trace);
+    }
+
+    .footer-pad {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--trace);
+        box-shadow: 0 0 5px var(--trace);
+    }
+
+    @media (max-width: 600px) {
+        .footer-inner {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
